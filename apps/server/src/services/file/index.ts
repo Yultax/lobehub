@@ -33,13 +33,19 @@ export class FileService {
   private userId: string;
   private fileModel: FileModel;
 
-  private impl: FileServiceImpl;
+  private _impl?: FileServiceImpl;
 
   constructor(db: LobeChatDatabase, userId: string, workspaceId?: string) {
     this.db = db;
     this.userId = userId;
     this.fileModel = new FileModel(db, userId, workspaceId);
-    this.impl = createFileServiceModule(db);
+  }
+
+  // Created on first use so procedures that never touch files keep working
+  // on deployments without S3 configured.
+  private get impl(): FileServiceImpl {
+    this._impl ??= createFileServiceModule(this.db);
+    return this._impl;
   }
 
   /**
